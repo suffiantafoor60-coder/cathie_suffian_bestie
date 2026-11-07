@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>For Cathie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#15173b;
+  --night-2:#1f2252;
+  --lilac:#b9a8ff;
+  --peach:#ffc7b0;
+  --mint:#8df0d2;
+  --paper:#f7f4ff;
+  --ink:#241f45;
+  --display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
+  --body:'Figtree','Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--body);background:var(--night);color:var(--paper);line-height:1.65;overflow-x:hidden}
+body.locked{overflow:hidden}
+img{max-width:100%;display:block}
+button{font:inherit;color:inherit;border:0;background:none}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--mint);outline-offset:3px}
+
+/* ---------- custom cursor ---------- */
+@media (hover:hover) and (pointer:fine){
+  html.has-cursor, html.has-cursor *{cursor:none !important}
+}
+#cur-dot,#cur-ring{position:fixed;top:0;left:0;pointer-events:none;z-index:99999;border-radius:50%;transform:translate(-100px,-100px)}
+#cur-dot{width:8px;height:8px;margin:-4px 0 0 -4px;background:var(--peach)}
+#cur-ring{width:38px;height:38px;margin:-19px 0 0 -19px;border:2px solid var(--lilac);transition:width .2s,height .2s,margin .2s,background .2s,border-color .2s}
+#cur-ring.hot{width:64px;height:64px;margin:-32px 0 0 -32px;background:rgba(185,168,255,.18);border-color:var(--mint)}
+#cur-ring.down{width:26px;height:26px;margin:-13px 0 0 -13px;background:rgba(255,199,176,.35)}
+.spark{position:fixed;pointer-events:none;z-index:99998;font-size:14px;color:var(--peach);animation:spark .9s ease-out forwards}
+@keyframes spark{to{transform:translate(var(--dx),var(--dy)) scale(.2) rotate(120deg);opacity:0}}
+html:not(.has-cursor) #cur-dot,html:not(.has-cursor) #cur-ring{display:none}
+
+/* ---------- lock screen ---------- */
+#lock{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;padding:24px;
+  background:radial-gradient(900px 600px at 20% 10%,#2c2f78 0%,transparent 60%),radial-gradient(700px 500px at 90% 90%,#4a2f6e 0%,transparent 60%),var(--night);
+  transition:opacity .8s ease,visibility .8s}
+#lock.gone{opacity:0;visibility:hidden}
+#lockCanvas{position:absolute;inset:0;width:100%;height:100%}
+.lock-card{position:relative;width:min(420px,100%);padding:38px 32px;border-radius:28px;background:rgba(21,23,59,.72);
+  border:1px solid rgba(185,168,255,.35);backdrop-filter:blur(10px);text-align:center}
+.lock-card.shake{animation:shake .45s}
+@keyframes shake{20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.lock-icon{width:64px;height:64px;margin:0 auto 18px;border-radius:20px;display:grid;place-items:center;background:linear-gradient(135deg,var(--lilac),var(--peach));font-size:30px}
+.lock-card h1{font-family:var(--display);font-weight:800;font-size:1.9rem;line-height:1.15;margin-bottom:8px}
+.lock-card p{color:#cfcaf5;font-size:.98rem;margin-bottom:22px}
+.lock-card input{width:100%;padding:14px 18px;border-radius:16px;border:2px solid rgba(185,168,255,.4);background:rgba(255,255,255,.06);color:var(--paper);font:500 1.05rem var(--body);text-align:center;letter-spacing:.08em;outline:none}
+.lock-card input:focus{border-color:var(--mint)}
+.lock-card input::placeholder{letter-spacing:0;color:#9893c9}
+.btn{display:inline-block;margin-top:14px;padding:13px 28px;border-radius:999px;background:linear-gradient(135deg,var(--lilac),var(--peach));color:var(--ink);font:700 1rem var(--display);transition:transform .2s,box-shadow .2s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(185,168,255,.35)}
+#lockMsg{min-height:1.5em;margin-top:14px;font-size:.92rem;color:var(--peach)}
+.hint-btn{margin-top:6px;font-size:.88rem;color:#b3add9;text-decoration:underline;text-underline-offset:3px}
+
+/* ---------- layout ---------- */
+#site{visibility:hidden}
+#site.on{visibility:visible}
+section{position:relative;padding:96px 24px}
+.wrap{max-width:1040px;margin:0 auto}
+h2{font-family:var(--display);font-weight:800;font-size:clamp(1.9rem,4.5vw,3rem);line-height:1.1;margin-bottom:14px}
+.lead{max-width:60ch;color:#d8d3fa;font-size:1.08rem;margin-bottom:44px}
+nav{position:fixed;top:0;left:0;right:0;z-index:500;display:flex;justify-content:center;gap:6px;padding:12px;flex-wrap:wrap;pointer-events:none}
+nav a{pointer-events:auto;text-decoration:none;font-size:.9rem;font-weight:600;padding:8px 16px;border-radius:999px;background:rgba(21,23,59,.72);backdrop-filter:blur(8px);border:1px solid rgba(185,168,255,.25);transition:background .2s,color .2s}
+nav a:hover{background:var(--lilac);color:var(--ink)}
+
+/* ---------- hero ---------- */
+#hero{min-height:100vh;display:grid;place-items:center;text-align:center;padding-top:110px;overflow:hidden;
+  background:radial-gradient(800px 500px at 50% 0%,#33378a 0%,transparent 70%),var(--night)}
+#heroCanvas{position:absolute;inset:0;width:100%;height:100%}
+.hero-inner{position:relative;max-width:820px}
+.hero-sub{font-size:1.05rem;color:var(--mint);font-weight:600;margin-bottom:14px}
+#hero h1{font-family:var(--display);font-weight:800;font-size:clamp(3.4rem,13vw,9rem);line-height:.95;letter-spacing:-.03em;
+  background:linear-gradient(100deg,var(--lilac) 10%,var(--peach) 60%,var(--mint) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:rise 1.1s cubic-bezier(.2,.8,.2,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(40px) scale(.96)}to{opacity:1;transform:none}}
+.aka{font-family:var(--display);font-size:1.3rem;margin:16px 0 26px;color:#e9e5ff}
+.typed{min-height:3.4em;max-width:52ch;margin:0 auto 30px;font-size:1.15rem;color:#d8d3fa}
+.caret{display:inline-block;width:2px;height:1.1em;background:var(--peach);vertical-align:-.15em;margin-left:3px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.scroll-cue{display:inline-block;margin-top:6px;color:var(--lilac);text-decoration:none;font-weight:600}
+
+/* ---------- diagram ---------- */
+#system{background:var(--paper);color:var(--ink)}
+#system .lead{color:#4b4574}
+.diagram{background:#fff;border-radius:28px;padding:28px 18px;border:2px solid #e3dcff}
+.diagram svg{width:100%;height:auto;display:block}
+.flow{stroke-dasharray:8 8;animation:dash 1.2s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-16}}
+.diagram text{font-family:var(--display)}
+.diagram-note{margin-top:16px;color:#4b4574;font-size:.95rem;text-align:center}
+
+/* ---------- flip cards ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
+.flip{perspective:900px;height:260px;text-align:left}
+.flip-inner{position:relative;width:100%;height:100%;transition:transform .7s cubic-bezier(.3,.8,.3,1);transform-style:preserve-3d}
+.flip.open .flip-inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:24px;padding:26px;display:flex;flex-direction:column;justify-content:space-between}
+.front{background:var(--night-2);border:1px solid rgba(185,168,255,.35)}
+.back{transform:rotateY(180deg);color:var(--ink)}
+.flip:nth-child(1) .back{background:var(--lilac)}
+.flip:nth-child(2) .back{background:var(--peach)}
+.flip:nth-child(3) .back{background:var(--mint)}
+.flip:nth-child(4) .back{background:#ffe9a8}
+.face .emo{font-size:2.4rem}
+.face h3{font-family:var(--display);font-size:1.4rem;line-height:1.2}
+.face small{opacity:.7;font-weight:600}
+.back p{font-size:1.02rem;line-height:1.5}
+
+/* ---------- gallery ---------- */
+#gallery{background:var(--night-2)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.shot{position:relative;aspect-ratio:1/1;border-radius:22px;overflow:hidden;background:var(--night);border:2px solid rgba(185,168,255,.3);transition:transform .3s,border-color .3s;text-align:left}
+.shot:nth-child(3n+1){transform:rotate(-1.2deg)}
+.shot:nth-child(3n){transform:rotate(1.2deg)}
+.shot:hover{transform:rotate(0) scale(1.03);border-color:var(--peach);z-index:2}
+.shot img{width:100%;height:100%;object-fit:cover}
+.shot .ph{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#b3add9;font-size:.92rem;text-align:center;padding:12px;
+  background:repeating-linear-gradient(45deg,rgba(185,168,255,.07) 0 12px,transparent 12px 24px)}
+.shot .ph b{font-family:var(--display);font-size:1.6rem;color:var(--lilac)}
+.shot.missing .ph{display:flex}
+.shot.missing img{display:none}
+.cap{position:absolute;left:0;right:0;bottom:0;padding:26px 14px 10px;font-size:.88rem;font-weight:600;background:linear-gradient(transparent,rgba(21,23,59,.9));opacity:0;transition:opacity .25s}
+.shot:hover .cap{opacity:1}
+.shot.missing .cap{display:none}
+#lb{position:fixed;inset:0;z-index:9500;background:rgba(10,11,30,.94);display:none;align-items:center;justify-content:center;padding:24px;flex-direction:column;gap:14px}
+#lb.open{display:flex}
+#lb img{max-height:76vh;border-radius:18px}
+#lbCap{color:#d8d3fa}
+.lb-btn{position:absolute;top:50%;width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.12);font-size:1.4rem;transform:translateY(-50%)}
+.lb-btn:hover{background:var(--lilac);color:var(--ink)}
+#lbPrev{left:18px}#lbNext{right:18px}#lbClose{top:26px;right:18px;transform:none}
+
+/* ---------- stats ---------- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
+.stat{padding:28px 22px;border-radius:24px;background:var(--night-2);border:1px solid rgba(185,168,255,.3)}
+.stat .n{font-family:var(--display);font-weight:800;font-size:3rem;line-height:1;color:var(--peach)}
+.stat:nth-child(2) .n{color:var(--mint)}
+.stat:nth-child(3) .n{color:var(--lilac)}
+.stat:nth-child(4) .n{color:#ffe9a8}
+.stat p{margin-top:10px;color:#d8d3fa;font-size:.98rem}
+
+/* ---------- signal / wishes ---------- */
+#wishes{background:var(--paper);color:var(--ink);text-align:center}
+#wishes .lead{color:#4b4574;margin-left:auto;margin-right:auto}
+.wish-box{max-width:640px;margin:0 auto;min-height:150px;display:grid;place-items:center;padding:30px;border-radius:28px;background:#fff;border:2px solid #e3dcff;font-family:var(--display);font-weight:700;font-size:1.5rem;line-height:1.3}
+.wish-box.pop{animation:pop .5s}
+@keyframes pop{0%{transform:scale(.94);opacity:.4}100%{transform:none;opacity:1}}
+#wishes .btn{margin-top:22px}
+
+/* ---------- letter ---------- */
+.letter{max-width:680px;margin:0 auto;padding:44px 38px;border-radius:30px;background:linear-gradient(160deg,var(--night-2),#2a2060);border:1px solid rgba(185,168,255,.4)}
+.letter h2{font-size:2rem}
+.letter p{margin-bottom:16px;color:#e7e3ff;font-size:1.08rem}
+.sign{font-family:var(--display);font-weight:700;font-size:1.3rem;color:var(--peach)}
+footer{padding:40px 24px 60px;text-align:center;color:#a8a2d6;font-size:.92rem}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:9800;width:100%;height:100%}
+
+@media(max-width:700px){
+  section{padding:76px 18px}
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .letter{padding:32px 22px}
+  nav a{padding:6px 12px;font-size:.82rem}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body class="locked">
+
+<div id="cur-dot"></div><div id="cur-ring"></div>
+<canvas id="confetti"></canvas>
+
+<!-- ============ LOCK SCREEN ============ -->
+<div id="lock" role="dialog" aria-labelledby="lockTitle">
+  <canvas id="lockCanvas"></canvas>
+  <div class="lock-card" id="lockCard">
+    <div class="lock-icon" aria-hidden="true">🔐</div>
+    <h1 id="lockTitle">A little something for Cathie</h1>
+    <p>This page is private. Enter the password to open it.</p>
+    <input id="pw" type="password" placeholder="Password" autocomplete="off" aria-label="Password">
+    <button class="btn" id="enter">Open</button>
+    <div id="lockMsg" aria-live="polite"></div>
+    <button class="hint-btn" id="hintBtn">Need a hint?</button>
+  </div>
+</div>
+
+<!-- ============ SITE ============ -->
+<div id="site">
+<nav>
+  <a href="#hero">Home</a><a href="#system">Us</a><a href="#you">You</a><a href="#gallery">Photos</a><a href="#wishes">Signals</a><a href="#letter">Letter</a>
+</nav>
+
+<section id="hero">
+  <canvas id="heroCanvas"></canvas>
+  <div class="hero-inner">
+    <p class="hero-sub">A friendship celebration</p>
+    <h1>Cathie</h1>
+    <p class="aka">Ekaterina, but you already know that</p>
+    <p class="typed"><span id="typed"></span><span class="caret"></span></p>
+    <a class="scroll-cue" href="#system">See how it happened ↓</a>
+  </div>
+</section>
+
+<section id="system">
+  <div class="wrap">
+    <h2>How this friendship works</h2>
+    <p class="lead">You study technical cybernetics, so here is our friendship as a control system. Short version: it reached a stable state much faster than expected.</p>
+    <div class="diagram">
+      <svg viewBox="0 0 900 330" role="img" aria-label="Block diagram: Hello leads to Conversations, then to Bestie, with a feedback loop of laughter back to Conversations">
+        <defs>
+          <marker id="ah" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6b5bd6"/></marker>
+        </defs>
+        <circle cx="90" cy="130" r="26" fill="#fff" stroke="#6b5bd6" stroke-width="3"/>
+        <text x="90" y="138" text-anchor="middle" font-size="22" fill="#6b5bd6" font-weight="800">+</text>
+        <text x="30" y="100" font-size="17" fill="#241f45" font-weight="700">Hello</text>
+        <line class="flow" x1="116" y1="130" x2="264" y2="130" stroke="#6b5bd6" stroke-width="3" marker-end="url(#ah)"/>
+        <rect x="270" y="86" width="190" height="88" rx="20" fill="#b9a8ff"/>
+        <text x="365" y="124" text-anchor="middle" font-size="20" fill="#241f45" font-weight="800">Conversations</text>
+        <text x="365" y="149" text-anchor="middle" font-size="14" fill="#241f45">easy, never forced</text>
+        <line class="flow" x1="460" y1="130" x2="598" y2="130" stroke="#6b5bd6" stroke-width="3" marker-end="url(#ah)"/>
+        <rect x="604" y="86" width="190" height="88" rx="20" fill="#ffc7b0"/>
+        <text x="699" y="124" text-anchor="middle" font-size="20" fill="#241f45" font-weight="800">Bestie</text>
+        <text x="699" y="149" text-anchor="middle" font-size="14" fill="#241f45">reached in record time</text>
+        <line class="flow" x1="830" y1="130" x2="830" y2="130" stroke="#6b5bd6"/>
+        <line class="flow" x1="794" y1="130" x2="860" y2="130" stroke="#6b5bd6" stroke-width="3"/>
+        <path class="flow" d="M 700 174 L 700 262 L 90 262 L 90 160" fill="none" stroke="#2fbf9a" stroke-width="3" marker-end="url(#ah)"/>
+        <rect x="300" y="240" width="220" height="44" rx="22" fill="#8df0d2"/>
+        <text x="410" y="268" text-anchor="middle" font-size="17" fill="#241f45" font-weight="800">Feedback: laughter</text>
+        <text x="868" y="136" font-size="15" fill="#241f45" font-weight="700">out</text>
+      </svg>
+      <p class="diagram-note">Positive feedback, zero oscillation, and no steady-state error. The system is very stable.</p>
+    </div>
+  </div>
+</section>
+
+<section id="you">
+  <div class="wrap">
+    <h2>Four things about you</h2>
+    <p class="lead">Tap a card to flip it.</p>
+    <div class="cards">
+      <button class="flip" aria-label="Flip card: Smart">
+        <div class="flip-inner">
+          <div class="face front"><span class="emo">🧠</span><div><h3>Smart</h3><small>tap to flip</small></div></div>
+          <div class="face back"><h3>Cybernetics, level: master’s</h3><p>You are doing magistratura in technical cybernetics. Systems, feedback, control: you understand how complicated things work, and you make it look natural.</p></div>
+        </div>
+      </button>
+      <button class="flip" aria-label="Flip card: Easy to talk to">
+        <div class="flip-inner">
+          <div class="face front"><span class="emo">💬</span><div><h3>Easy to talk to</h3><small>tap to flip</small></div></div>
+          <div class="face back"><h3>No awkward pauses</h3><p>Talking with you never feels like effort. You listen, you respond, and the conversation just keeps flowing.</p></div>
+        </div>
+      </button>
+      <button class="flip" aria-label="Flip card: Hopeful">
+        <div class="flip-inner">
+          <div class="face front"><span class="emo">✨</span><div><h3>Hopeful</h3><small>tap to flip</small></div></div>
+          <div class="face back"><h3>Bright eyes, bright outlook</h3><p>Your eyes are full of hope, and it shows in how you see the world. Being around you makes plans and futures feel possible.</p></div>
+        </div>
+      </button>
+      <button class="flip" aria-label="Flip card: Instant bestie">
+        <div class="flip-inner">
+          <div class="face front"><span class="emo">🤝</span><div><h3>An instant bestie</h3><small>tap to flip</small></div></div>
+          <div class="face back"><h3>Short time, big feeling</h3><p>We met not long ago, but it already feels like we have known each other for years. That is rare, and I am grateful for it.</p></div>
+        </div>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section id="gallery">
+  <div class="wrap">
+    <h2>Our little gallery</h2>
+    <p class="lead">Nine moments, one folder. Tap any photo to see it bigger.</p>
+    <div class="grid" id="grid"></div>
+  </div>
+</section>
+
+<section id="stats">
+  <div class="wrap">
+    <h2>Friendship, measured</h2>
+    <p class="lead">A very scientific and completely made-up report.</p>
+    <div class="stats">
+      <div class="stat"><div class="n" data-to="100" data-suffix="%">0</div><p>Ease of conversation</p></div>
+      <div class="stat"><div class="n" data-to="1" data-suffix=" bestie">0</div><p>Gained in a very short time</p></div>
+      <div class="stat"><div class="n" data-to="999" data-suffix="+">0</div><p>Good vibes per chat</p></div>
+      <div class="stat"><div class="n">∞</div><p>Reasons to keep this going</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="wishes">
+  <div class="wrap">
+    <h2>Send a signal</h2>
+    <p class="lead">Press the button for a wish, a compliment or a tiny reminder. There are plenty, and they are all meant.</p>
+    <div class="wish-box" id="wishBox">Press the button below.</div>
+    <button class="btn" id="wishBtn">Send me a signal</button>
+  </div>
+</section>
+
+<section id="letter">
+  <div class="wrap">
+    <div class="letter">
+      <h2>Dear Cathie,</h2>
+      <p>Some friendships take years to feel comfortable. Ours skipped that part. Somewhere in a short stretch of time you went from a new friend to someone I would call my bestie, and I am very happy about it.</p>
+      <p>You are smart, kind and so easy to talk to. You carry hope in your eyes, and it makes the people around you feel lighter. I hope your studies go beautifully, your ideas turn into real things, and every day brings you a reason to smile.</p>
+      <p>Thank you for being you, and for being my friend. Here is to many more talks, laughs and good days.</p>
+      <p class="sign">Your friend, Suffian (aka Zane)</p>
+    </div>
+  </div>
+</section>
+
+<footer>Made with care by Suffian (Zane) for Ekaterina “Cathie”. Click anywhere for a little sparkle.</footer>
+</div>
+
+<!-- ============ LIGHTBOX ============ -->
+<div id="lb" role="dialog" aria-label="Photo viewer">
+  <button class="lb-btn" id="lbClose" aria-label="Close">✕</button>
+  <button class="lb-btn" id="lbPrev" aria-label="Previous photo">‹</button>
+  <img id="lbImg" alt="">
+  <p id="lbCap"></p>
+  <button class="lb-btn" id="lbNext" aria-label="Next photo">›</button>
+</div>
+
+<script>
+/* ================= SETTINGS (edit these) ================= */
+const PASSWORD = 'cathie';                 // not case-sensitive
+const HINT = 'Think of the name I call you. All lowercase.';
+const CAPTIONS = [
+  'Photo 1','Photo 2','Photo 3','Photo 4','Photo 5','Photo 6','Photo 7','Photo 8','Photo 9'
+];
+const TYPED_LINES = 'Some people feel like old friends from the very first conversation. You are one of them.';
+const WISHES = [
+  'You make hard things look easy. Keep going.',
+  'Your smile is the kind that makes a whole room feel warmer.',
+  'Reminder: you are smarter than you give yourself credit for.',
+  'May every system you study behave exactly as predicted.',
+  'Talking to you is one of my favourite parts of the day.',
+  'Your hope is contagious. Never lose it.',
+  'You are allowed to rest. Even the best controllers need a break.',
+  'Wishing you a day with zero bugs and a lot of laughter.',
+  'Thank you for being such a kind and genuine friend.',
+  'Whatever you aim for next, I am cheering for you.',
+  'Good friends are rare. I am lucky to have you.',
+  'May your coffee be strong and your deadlines be gentle.'
+];
+
+/* ================= helpers ================= */
+const $ = s => document.querySelector(s);
+const root = document.documentElement;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ================= custom cursor ================= */
+(function(){
+  if(!matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+  root.classList.add('has-cursor');
+  const dot=$('#cur-dot'), ring=$('#cur-ring');
+  let mx=-100,my=-100,rx=-100,ry=-100,lastSpark=0;
+  addEventListener('mousemove',e=>{
+    mx=e.clientX;my=e.clientY;
+    dot.style.transform=`translate(${mx}px,${my}px)`;
+    const now=performance.now();
+    if(!reduce && now-lastSpark>70){lastSpark=now;sparkle(mx,my,1)}
+    const t=e.target.closest&&e.target.closest('button,a,input,.shot,.flip');
+    ring.classList.toggle('hot',!!t);
+  });
+  addEventListener('mousedown',()=>{ring.classList.add('down');if(!reduce)sparkle(mx,my,8)});
+  addEventListener('mouseup',()=>ring.classList.remove('down'));
+  (function loop(){rx+=(mx-rx)*.18;ry+=(my-ry)*.18;ring.style.transform=`translate(${rx}px,${ry}px)`;requestAnimationFrame(loop)})();
+  function sparkle(x,y,n){
+    const chars=['✦','✧','♡','·'];
+    for(let i=0;i<n;i++){
+      const s=document.createElement('span');
+      s.className='spark';
+      s.textContent=chars[Math.floor(Math.random()*chars.length)];
+      s.style.left=x+'px';s.style.top=y+'px';
+      s.style.setProperty('--dx',(Math.random()*80-40)+'px');
+      s.style.setProperty('--dy',(Math.random()*80-10)+'px');
+      s.style.color=['#ffc7b0','#b9a8ff','#8df0d2'][Math.floor(Math.random()*3)];
+      document.body.appendChild(s);
+      setTimeout(()=>s.remove(),900);
+    }
+  }
+})();
+
+/* ================= particle network canvas ================= */
+function network(canvas,count,interactive){
+  const c=canvas.getContext('2d');
+  let w,h,pts=[],mouse={x:-999,y:-999};
+  function size(){w=canvas.width=canvas.offsetWidth;h=canvas.height=canvas.offsetHeight}
+  size();addEventListener('resize',size);
+  for(let i=0;i<count;i++)pts.push({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,r:Math.random()*2+1});
+  if(interactive)canvas.parentElement.addEventListener('mousemove',e=>{const b=canvas.getBoundingClientRect();mouse.x=e.clientX-b.left;mouse.y=e.clientY-b.top});
+  const cols=['185,168,255','255,199,176','141,240,210'];
+  function frame(){
+    c.clearRect(0,0,w,h);
+    for(const p of pts){
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0||p.x>w)p.vx*=-1;if(p.y<0||p.y>h)p.vy*=-1;
+      const dx=p.x-mouse.x,dy=p.y-mouse.y,d=Math.hypot(dx,dy);
+      if(d<110){p.x+=dx/d*1.6;p.y+=dy/d*1.6}
+    }
+    for(let i=0;i<pts.length;i++){
+      const a=pts[i];
+      c.fillStyle=`rgba(${cols[i%3]},.9)`;
+      c.beginPath();c.arc(a.x,a.y,a.r,0,7);c.fill();
+      for(let j=i+1;j<pts.length;j++){
+        const b=pts[j],d=Math.hypot(a.x-b.x,a.y-b.y);
+        if(d<130){c.strokeStyle=`rgba(185,168,255,${.28*(1-d/130)})`;c.lineWidth=1;c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke()}
+      }
+      const md=Math.hypot(a.x-mouse.x,a.y-mouse.y);
+      if(md<160){c.strokeStyle=`rgba(255,199,176,${.5*(1-md/160)})`;c.beginPath();c.moveTo(a.x,a.y);c.lineTo(mouse.x,mouse.y);c.stroke()}
+    }
+    if(!reduce)requestAnimationFrame(frame);
+  }
+  frame();
+}
+network($('#lockCanvas'),55,true);
+
+/* ================= confetti ================= */
+function confetti(){
+  if(reduce)return;
+  const cv=$('#confetti'),c=cv.getContext('2d');
+  cv.width=innerWidth;cv.height=innerHeight;
+  const cols=['#b9a8ff','#ffc7b0','#8df0d2','#ffe9a8','#ffffff'];
+  const ps=Array.from({length:160},()=>({x:innerWidth/2,y:innerHeight/2,vx:(Math.random()-.5)*16,vy:Math.random()*-14-3,s:Math.random()*8+4,r:Math.random()*6,vr:(Math.random()-.5)*.3,c:cols[Math.floor(Math.random()*cols.length)]}));
+  let t=0;
+  (function f(){
+    c.clearRect(0,0,cv.width,cv.height);
+    ps.forEach(p=>{p.vy+=.28;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;c.save();c.translate(p.x,p.y);c.rotate(p.r);c.fillStyle=p.c;c.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);c.restore()});
+    if(++t<200)requestAnimationFrame(f);else c.clearRect(0,0,cv.width,cv.height);
+  })();
+}
+
+/* ================= lock logic ================= */
+const pw=$('#pw'),msg=$('#lockMsg'),card=$('#lockCard');
+let tries=0;
+function tryUnlock(){
+  if(pw.value.trim().toLowerCase()===PASSWORD.toLowerCase()){
+    msg.style.color='#8df0d2';msg.textContent='Welcome, Cathie!';
+    $('#lock').classList.add('gone');
+    document.body.classList.remove('locked');
+    $('#site').classList.add('on');
+    window.scrollTo(0,0);
+    confetti();startSite();
+  }else{
+    tries++;
+    card.classList.remove('shake');void card.offsetWidth;card.classList.add('shake');
+    msg.style.color='#ffc7b0';
+    msg.textContent=tries>=2?'Not quite. Tap “Need a hint?” below.':'That is not the password. Try again.';
+    pw.select();
+  }
+}
+$('#enter').addEventListener('click',tryUnlock);
+pw.addEventListener('keydown',e=>{if(e.key==='Enter')tryUnlock()});
+$('#hintBtn').addEventListener('click',()=>{msg.style.color='#ffe9a8';msg.textContent=HINT});
+pw.focus();
+
+/* ================= site features ================= */
+let started=false;
+function startSite(){
+  if(started)return;started=true;
+  network($('#heroCanvas'),70,true);
+
+  // typing effect
+  const el=$('#typed');let i=0;
+  if(reduce){el.textContent=TYPED_LINES}
+  else(function type(){el.textContent=TYPED_LINES.slice(0,++i);if(i<TYPED_LINES.length)setTimeout(type,38)})();
+
+  // counters
+  const io=new IntersectionObserver(es=>es.forEach(en=>{
+    if(!en.isIntersecting)return;io.unobserve(en.target);
+    const n=en.target,to=+n.dataset.to,suf=n.dataset.suffix||'';
+    if(!to)return;let v=0;const step=Math.max(1,Math.ceil(to/50));
+    const t=setInterval(()=>{v=Math.min(to,v+step);n.textContent=v+suf;if(v>=to)clearInterval(t)},30);
+  }),{threshold:.6});
+  document.querySelectorAll('.n[data-to]').forEach(n=>io.observe(n));
+}
+
+// flip cards
+document.querySelectorAll('.flip').forEach(f=>f.addEventListener('click',()=>f.classList.toggle('open')));
+
+// gallery
+const grid=$('#grid');
+const srcs=Array.from({length:9},(_,i)=>`img${i+1}.jpeg`);
+srcs.forEach((src,i)=>{
+  const b=document.createElement('button');
+  b.className='shot';b.setAttribute('aria-label','Open photo '+(i+1));
+  b.innerHTML=`<img src="${src}" alt="${CAPTIONS[i]}" loading="lazy"><div class="ph"><b>${i+1}</b><span>Add <code>${src}</code><br>to this folder</span></div><div class="cap">${CAPTIONS[i]}</div>`;
+  const img=b.querySelector('img');
+  img.addEventListener('error',()=>b.classList.add('missing'));
+  b.addEventListener('click',()=>{if(!b.classList.contains('missing'))openLb(i)});
+  grid.appendChild(b);
+});
+let cur=0;
+function showLb(){const im=$('#lbImg');im.src=srcs[cur];im.alt=CAPTIONS[cur];$('#lbCap').textContent=CAPTIONS[cur]+'  ('+(cur+1)+' / 9)'}
+function openLb(i){cur=i;showLb();$('#lb').classList.add('open')}
+function closeLb(){$('#lb').classList.remove('open')}
+function moveLb(d){
+  for(let k=0;k<9;k++){cur=(cur+d+9)%9;const b=grid.children[cur];if(!b.classList.contains('missing'))break}
+  showLb();
+}
+$('#lbClose').onclick=closeLb;$('#lbPrev').onclick=()=>moveLb(-1);$('#lbNext').onclick=()=>moveLb(1);
+$('#lb').addEventListener('click',e=>{if(e.target.id==='lb')closeLb()});
+addEventListener('keydown',e=>{
+  if(!$('#lb').classList.contains('open'))return;
+  if(e.key==='Escape')closeLb();if(e.key==='ArrowLeft')moveLb(-1);if(e.key==='ArrowRight')moveLb(1);
+});
+
+// wishes
+let last=-1;
+$('#wishBtn').addEventListener('click',()=>{
+  let n;do{n=Math.floor(Math.random()*WISHES.length)}while(n===last);last=n;
+  const box=$('#wishBox');box.classList.remove('pop');void box.offsetWidth;
+  box.textContent=WISHES[n];box.classList.add('pop');
+});
+</script>
+</body>
+</html>
